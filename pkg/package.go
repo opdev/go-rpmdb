@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"golang.org/x/xerrors"
 	"io"
 	"path/filepath"
-
-	"golang.org/x/xerrors"
 )
 
 type PackageInfo struct {
@@ -21,6 +20,7 @@ type PackageInfo struct {
 	License         string
 	Vendor          string
 	Modularitylabel string
+	Summary         string
 
 	BaseNames  []string
 	DirIndexes []int
@@ -133,6 +133,13 @@ func getNEVRA(indexEntries []indexEntry) (*PackageInfo, error) {
 				return nil, xerrors.Errorf("failed to read binary (size): %w", err)
 			}
 			pkgInfo.Size = int(size)
+
+		case RPMTAG_SUMMARY:
+			if ie.Info.Type != RPM_I18NSTRING_TYPE {
+				return nil, xerrors.New("invalid tag summary")
+			}
+			// since this is an international string, getting the first null terminated string
+			pkgInfo.Summary = string(bytes.Split(ie.Data, []byte{0})[0])
 		}
 
 	}
