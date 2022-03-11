@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"path/filepath"
-	"time"
 
 	"golang.org/x/xerrors"
 )
@@ -23,8 +21,6 @@ type PackageInfo struct {
 	License         string
 	Vendor          string
 	Modularitylabel string
-	Summary         string
-	PGP             string
 
 	BaseNames  []string
 	DirIndexes []int
@@ -137,98 +133,8 @@ func getNEVRA(indexEntries []indexEntry) (*PackageInfo, error) {
 				return nil, xerrors.Errorf("failed to read binary (size): %w", err)
 			}
 			pkgInfo.Size = int(size)
-		case RPMTAG_SUMMARY:
-			if ie.Info.Type != RPM_I18NSTRING_TYPE {
-				return nil, xerrors.New("invalid tag summary")
-			}
-			// since this is an international string, getting the first null terminated string
-			pkgInfo.Summary = string(bytes.Split(ie.Data, []byte{0})[0])
-		case RPMTAG_PGP:
-			type pgpSig struct {
-				_          [3]byte
-				Date       int32
-				KeyID      [8]byte
-				PubKeyAlgo uint8
-				HashAlgo   uint8
-			}
-
-			type textSig struct {
-				_          [2]byte
-				PubKeyAlgo uint8
-				HashAlgo   uint8
-				_          [4]byte
-				Date       int32
-				_          [4]byte
-				KeyID      [8]byte
-			}
-
-			pubKeyLookup := map[uint8]string{
-				0x01: "RSA",
-			}
-			hashLookup := map[uint8]string{
-				0x02: "SHA1",
-				0x08: "SHA256",
-			}
-
-			if ie.Info.Type != RPM_BIN_TYPE {
-				return nil, xerrors.New("invalid PGP signature")
-			}
-
-			var tag, signatureType, version uint8
-			r := bytes.NewReader(ie.Data)
-			err := binary.Read(r, binary.BigEndian, &tag)
-			if err != nil {
-				return nil, err
-			}
-			err = binary.Read(r, binary.BigEndian, &signatureType)
-			if err != nil {
-				return nil, err
-			}
-			err = binary.Read(r, binary.BigEndian, &version)
-			if err != nil {
-				return nil, err
-			}
-
-			var pubKeyAlgo, hashAlgo, pkgDate string
-			var keyId [8]byte
-
-			switch signatureType {
-			case 0x01:
-				switch version {
-				case 0x1c:
-					sig := textSig{}
-					err = binary.Read(r, binary.BigEndian, &sig)
-					if err != nil {
-						return nil, xerrors.Errorf("invalid PGP signature on decode: %w", err)
-					}
-					pubKeyAlgo = pubKeyLookup[sig.PubKeyAlgo]
-					hashAlgo = hashLookup[sig.HashAlgo]
-					pkgDate = time.Unix(int64(sig.Date), 0).UTC().Format("Mon Jan _2 15:04:05 2006")
-					keyId = sig.KeyID
-				default:
-					sig := pgpSig{}
-					err = binary.Read(r, binary.BigEndian, &sig)
-					if err != nil {
-						return nil, xerrors.Errorf("invalid PGP signature on decode: %w", err)
-					}
-					pubKeyAlgo = pubKeyLookup[sig.PubKeyAlgo]
-					hashAlgo = hashLookup[sig.HashAlgo]
-					pkgDate = time.Unix(int64(sig.Date), 0).UTC().Format("Mon Jan _2 15:04:05 2006")
-					keyId = sig.KeyID
-				}
-			case 0x02:
-				sig := pgpSig{}
-				err = binary.Read(r, binary.BigEndian, &sig)
-				if err != nil {
-					return nil, xerrors.Errorf("invalid PGP signature on decode: %w", err)
-				}
-				pubKeyAlgo = pubKeyLookup[sig.PubKeyAlgo]
-				hashAlgo = hashLookup[sig.HashAlgo]
-				pkgDate = time.Unix(int64(sig.Date), 0).UTC().Format("Mon Jan _2 15:04:05 2006")
-				keyId = sig.KeyID
-			}
-			pkgInfo.PGP = fmt.Sprintf("%s/%s, %s, Key ID %x", pubKeyAlgo, hashAlgo, pkgDate, keyId)
 		}
+
 	}
 	return pkgInfo, nil
 }
@@ -283,4 +189,5 @@ func (p *PackageInfo) InstalledFiles() ([]string, error) {
 	}
 
 	return filePaths, nil
+
 }

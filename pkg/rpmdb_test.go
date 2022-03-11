@@ -68,6 +68,11 @@ func TestPackageList(t *testing.T) {
 			file:    "testdata/sle15-bci/Packages.db",
 			pkgList: SLE15WithNDB,
 		},
+		{
+			name:    "Fedora35 with SQLite3 style rpm database",
+			file:    "testdata/fedora35/rpmdb.sqlite",
+			pkgList: Fedora35WithSQLite3,
+		},
 	}
 
 	for _, tt := range tests {
@@ -112,8 +117,6 @@ func TestRpmDB_Package(t *testing.T) {
 				SourceRpm: "python-2.4.3-56.el5.src.rpm",
 				License:   "PSF - see LICENSE",
 				Vendor:    "CentOS",
-				Summary:   "An interpreted, interactive, object-oriented programming language.",
-				PGP:       "",
 			},
 			wantInstalledFiles: CentOS5PythonInstalledFiles,
 		},
@@ -130,8 +133,6 @@ func TestRpmDB_Package(t *testing.T) {
 				SourceRpm: "glibc-2.12-1.212.el6.src.rpm",
 				License:   "LGPLv2+ and LGPLv2+ with exceptions and GPLv2+",
 				Vendor:    "CentOS",
-				Summary:   "The GNU libc libraries",
-				PGP:       "RSA/SHA1, Wed Jun 20 11:36:27 2018, Key ID 0946fca2c105b9de",
 			},
 			wantInstalledFiles: CentOS6GlibcInstalledFiles,
 		},
@@ -150,10 +151,25 @@ func TestRpmDB_Package(t *testing.T) {
 				License:         "MIT and ASL 2.0 and ISC and BSD",
 				Vendor:          "CentOS",
 				Modularitylabel: "nodejs:10:8020020200707141642:6a468ee4",
-				Summary:         "JavaScript runtime",
-				PGP:             "RSA/SHA256, Tue Jul  7 16:08:24 2020, Key ID 05b555b38483c65d",
 			},
 			wantInstalledFiles: CentOS8NodejsInstalledFiles,
+		},
+		{
+			name:    "CBL-Mariner 2.0 curl",
+			pkgName: "curl",
+			file:    "testdata/cbl-mariner-2.0/rpmdb.sqlite",
+			want: &PackageInfo{
+				Epoch:     0,
+				Name:      "curl",
+				Version:   "7.76.0",
+				Release:   "6.cm2",
+				Arch:      "x86_64",
+				Size:      326023,
+				SourceRpm: "curl-7.76.0-6.cm2.src.rpm",
+				License:   "MIT",
+				Vendor:    "Microsoft Corporation",
+			},
+			wantInstalledFiles: Mariner2CurlInstalledFiles,
 		},
 	}
 	for _, tt := range tests {

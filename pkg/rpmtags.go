@@ -22,8 +22,6 @@ const (
 	RPMTAG_DIRINDEXES = 1116
 	RPMTAG_BASENAMES  = 1117
 	RPMTAG_DIRNAMES   = 1118
-	RPMTAG_SUMMARY    = 1004
-	RPMTAG_PGP        = 259
 
 	// rpmTag_enhances
 	// https://github.com/rpm-software-management/rpm/blob/rpm-4.16.0-release/lib/rpmtag.h#L375
