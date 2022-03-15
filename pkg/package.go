@@ -162,6 +162,16 @@ func getNEVRA(indexEntries []indexEntry) (*PackageInfo, error) {
 				KeyID      [8]byte
 			}
 
+			type pgp4Sig struct {
+				_          [2]byte
+				PubKeyAlgo uint8
+				HashAlgo   uint8
+				_          [17]byte
+				KeyID      [8]byte
+				_          [2]byte
+				Date       int32
+			}
+
 			pubKeyLookup := map[uint8]string{
 				0x01: "RSA",
 			}
@@ -217,15 +227,28 @@ func getNEVRA(indexEntries []indexEntry) (*PackageInfo, error) {
 					keyId = sig.KeyID
 				}
 			case 0x02:
-				sig := pgpSig{}
-				err = binary.Read(r, binary.BigEndian, &sig)
-				if err != nil {
-					return nil, xerrors.Errorf("invalid PGP signature on decode: %w", err)
+				switch version {
+				case 0x33:
+					sig := pgp4Sig{}
+					err = binary.Read(r, binary.BigEndian, &sig)
+					if err != nil {
+						return nil, xerrors.Errorf("invalid PGP signature on decode: %w", err)
+					}
+					pubKeyAlgo = pubKeyLookup[sig.PubKeyAlgo]
+					hashAlgo = hashLookup[sig.HashAlgo]
+					pkgDate = time.Unix(int64(sig.Date), 0).UTC().Format("Mon Jan _2 15:04:05 2006")
+					keyId = sig.KeyID
+				default:
+					sig := pgpSig{}
+					err = binary.Read(r, binary.BigEndian, &sig)
+					if err != nil {
+						return nil, xerrors.Errorf("invalid PGP signature on decode: %w", err)
+					}
+					pubKeyAlgo = pubKeyLookup[sig.PubKeyAlgo]
+					hashAlgo = hashLookup[sig.HashAlgo]
+					pkgDate = time.Unix(int64(sig.Date), 0).UTC().Format("Mon Jan _2 15:04:05 2006")
+					keyId = sig.KeyID
 				}
-				pubKeyAlgo = pubKeyLookup[sig.PubKeyAlgo]
-				hashAlgo = hashLookup[sig.HashAlgo]
-				pkgDate = time.Unix(int64(sig.Date), 0).UTC().Format("Mon Jan _2 15:04:05 2006")
-				keyId = sig.KeyID
 			}
 			pkgInfo.PGP = fmt.Sprintf("%s/%s, %s, Key ID %x", pubKeyAlgo, hashAlgo, pkgDate, keyId)
 		}

@@ -68,6 +68,11 @@ func TestPackageList(t *testing.T) {
 			file:    "testdata/sle15-bci/Packages.db",
 			pkgList: SLE15WithNDB,
 		},
+		{
+			name:    "Fedora35 with SQLite3 style rpm database",
+			file:    "testdata/fedora35/rpmdb.sqlite",
+			pkgList: Fedora35WithSQLite3,
+		},
 	}
 
 	for _, tt := range tests {
@@ -154,6 +159,25 @@ func TestRpmDB_Package(t *testing.T) {
 				PGP:             "RSA/SHA256, Tue Jul  7 16:08:24 2020, Key ID 05b555b38483c65d",
 			},
 			wantInstalledFiles: CentOS8NodejsInstalledFiles,
+		},
+		{
+			name:    "CBL-Mariner 2.0 curl",
+			pkgName: "curl",
+			file:    "testdata/cbl-mariner-2.0/rpmdb.sqlite",
+			want: &PackageInfo{
+				Epoch:     0,
+				Name:      "curl",
+				Version:   "7.76.0",
+				Release:   "6.cm2",
+				Arch:      "x86_64",
+				Size:      326023,
+				SourceRpm: "curl-7.76.0-6.cm2.src.rpm",
+				License:   "MIT",
+				Vendor:    "Microsoft Corporation",
+				Summary:   "An URL retrieval utility and library",
+				PGP:       "RSA/SHA256, Thu Jan 27 09:02:11 2022, Key ID 0cd9fed33135ce90",
+			},
+			wantInstalledFiles: Mariner2CurlInstalledFiles,
 		},
 	}
 	for _, tt := range tests {
