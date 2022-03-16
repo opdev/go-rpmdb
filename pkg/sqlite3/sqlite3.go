@@ -9,7 +9,7 @@ import (
 	dbi "github.com/knqyf263/go-rpmdb/pkg/db"
 	"golang.org/x/xerrors"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type SQLite3 struct {
@@ -38,7 +38,7 @@ func Open(path string) (*SQLite3, error) {
 		return nil, ErrorInvalidSQLite3
 	}
 
-	db, err := sql.Open("sqlite", path)
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to open sqlite3: %w", err)
 	}
