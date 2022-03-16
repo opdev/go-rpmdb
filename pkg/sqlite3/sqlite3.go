@@ -36,7 +36,7 @@ func Open(path string) (*SQLite3, error) {
 		return nil, ErrorInvalidSQLite3
 	}
 
-	db, err := sql.Open("sqlite", path)
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to open sqlite3: %w", err)
 	}
