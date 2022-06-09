@@ -64,17 +64,19 @@ func (db *SQLite3) Read() <-chan dbi.Entry {
 			}
 		}
 
-		for rows.Next() {
-			var blob string
-			if err := rows.Scan(&blob); err != nil {
-				entries <- dbi.Entry{
-					Err: xerrors.Errorf("failed to Scan Row: %w", err),
+		if rows != nil { // nil if db.Query failed
+			for rows.Next() {
+				var blob string
+				if err := rows.Scan(&blob); err != nil {
+					entries <- dbi.Entry{
+						Err: xerrors.Errorf("failed to Scan Row: %w", err),
+					}
 				}
-			}
 
-			entries <- dbi.Entry{
-				Value: []byte(blob),
-				Err:   nil,
+				entries <- dbi.Entry{
+					Value: []byte(blob),
+					Err:   nil,
+				}
 			}
 		}
 	}()
