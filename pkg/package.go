@@ -138,7 +138,8 @@ func getNEVRA(indexEntries []indexEntry) (*PackageInfo, error) {
 			}
 			pkgInfo.Size = int(size)
 		case RPMTAG_SUMMARY:
-			if ie.Info.Type != RPM_I18NSTRING_TYPE {
+			// some libraries have a string value instead of international string, so accounting for both
+			if ie.Info.Type != RPM_I18NSTRING_TYPE && ie.Info.Type != RPM_STRING_TYPE {
 				return nil, xerrors.New("invalid tag summary")
 			}
 			// since this is an international string, getting the first null terminated string
